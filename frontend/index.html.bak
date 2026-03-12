@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewAI — Smart Interview Simulator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- LOADING OVERLAY -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Preparing your interview...</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- WARNING OVERLAY (Eye Tracking) -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="eye-warning-overlay" class="eye-warning-overlay hidden">
+        <div class="warning-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p id="eye-warning-text">Please look at the screen!</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: HOME PAGE -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="home-view" class="view active">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>Interview<span class="accent">AI</span></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="tagline">AI-Powered Interview Simulator</span>
+            </div>
+        </header>
+
+        <div class="home-container">
+            <!-- LEFT: Setup Form -->
+            <div class="setup-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-rocket"></i> Start New Interview</h2>
+                    <p>Configure your mock interview session</p>
+                </div>
+
+                <form id="interview-form" class="interview-form">
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label for="candidate-name">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <input type="text" id="candidate-name" placeholder="Enter your name" required>
+                    </div>
+
+                    <!-- Domain Selection -->
+                    <div class="form-group">
+                        <label for="domain-select">
+                            <i class="fas fa-code"></i> Tech Domain
+                        </label>
+                        <select id="domain-select" required>
+                            <option value="" disabled selected>Select your domain</option>
+                            <option value="Frontend Development">Frontend Development</option>
+                            <option value="Backend Development">Backend Development</option>
+                            <option value="Full Stack Development">Full Stack Development</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Machine Learning / AI">Machine Learning / AI</option>
+                            <option value="Mobile App Development">Mobile App Development</option>
+                            <option value="Cloud Computing & DevOps">Cloud Computing & DevOps</option>
+                            <option value="Cybersecurity">Cybersecurity</option>
+                            <option value="Blockchain & Web3">Blockchain & Web3</option>
+                            <option value="Database & System Design">Database & System Design</option>
+                        </select>
+                    </div>
+
+                    <!-- Difficulty -->
+                    <div class="form-group">
+                        <label for="difficulty-select">
+                            <i class="fas fa-signal"></i> Difficulty Level
+                        </label>
+                        <select id="difficulty-select" required>
+                            <option value="" disabled selected>Select difficulty</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <!-- Company Mode -->
+                    <div class="form-group">
+                        <label for="company-select">
+                            <i class="fas fa-building"></i> Company Mode
+                        </label>
+                        <select id="company-select" required>
+                            <option value="" disabled selected>Select company mode</option>
+                            <option value="Google">🔍 Google</option>
+                            <option value="Amazon">📦 Amazon</option>
+                            <option value="Meta">👤 Meta (Facebook)</option>
+                            <option value="Apple">🍎 Apple</option>
+                            <option value="Netflix">🎬 Netflix</option>
+                            <option value="Microsoft">🪟 Microsoft</option>
+                            <option value="Startup">🚀 Startup</option>
+                        </select>
+                    </div>
+
+                    <!-- Resume Upload -->
+                    <div class="form-group">
+                        <label for="resume-upload">
+                            <i class="fas fa-file-pdf"></i> Upload Resume (Optional)
+                        </label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <input type="file" id="resume-upload" accept=".pdf" hidden>
+                            <div class="upload-placeholder" id="upload-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click or drag PDF resume here</p>
+                                <span>AI will tailor questions to your experience</span>
+                            </div>
+                            <div class="upload-success hidden" id="upload-success">
+                                <i class="fas fa-check-circle"></i>
+                                <p id="uploaded-filename">resume.pdf</p>
+                                <button type="button" id="remove-resume" class="btn-text">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Button -->
+                    <button type="submit" class="btn btn-primary btn-large" id="start-btn">
+                        <i class="fas fa-play"></i> Start Interview
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT: History Panel -->
+            <div class="history-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-history"></i> Interview History</h2>
+                    <p>Your past performances</p>
+                </div>
+
+                <!-- Average Performance -->
+                <div class="avg-performance" id="avg-performance">
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-total-score">--</div>
+                        <div class="avg-label">Avg Score</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-round1-score">--</div>
+                        <div class="avg-label">Avg Round 1</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-round2-score">--</div>
+                        <div class="avg-label">Avg Round 2</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="total-interviews">0</div>
+                        <div class="avg-label">Total</div>
+                    </div>
+                </div>
+
+                <!-- History List -->
+                <div class="history-list" id="history-list">
+                    <div class="history-empty">
+                        <i class="fas fa-inbox"></i>
+                        <p>No interviews yet</p>
+                        <span>Start your first mock interview!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 1 — DSA CODING -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="round1-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <div class="logo-small">
+                    <i class="fas fa-brain"></i> InterviewAI
+                </div>
+                <div class="round-badge">Round 1 — Coding Challenge</div>
+            </div>
+            <div class="header-right">
+                <div class="timer" id="round1-timer">
+                    <i class="fas fa-clock"></i> <span id="r1-time">45:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="round1-container">
+            <!-- Question Panel -->
+            <div class="question-panel" id="question-panel">
+                <div class="question-header">
+                    <span class="question-difficulty" id="q-difficulty">Medium</span>
+                    <span class="question-topic" id="q-topic">Arrays</span>
+                </div>
+                <h2 id="q-title">Loading question...</h2>
+                <div class="question-body" id="q-description">
+                    <p>Please wait while we generate your coding challenge...</p>
+                </div>
+                <div class="question-examples" id="q-examples"></div>
+                <div class="question-constraints" id="q-constraints"></div>
+            </div>
+
+            <!-- Code Editor Panel -->
+            <div class="editor-panel">
+                <div class="editor-toolbar">
+                    <select id="language-select" class="lang-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="text/x-java">Java</option>
+                        <option value="text/x-csrc">C</option>
+                        <option value="text/x-c++src">C++</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline" id="reset-code-btn">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div id="code-editor"></div>
+                <div class="editor-footer">
+                    <button class="btn btn-primary btn-large" id="submit-code-btn">
+                        <i class="fas fa-paper-plane"></i> Submit Solution
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 1 RESULTS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="round1-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <div class="logo-small"><i class="fas fa-brain"></i> InterviewAI</div>
+                <div class="round-badge results-badge">Round 1 — Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card">
+                <div class="score-circle">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="score-bg" cx="60" cy="60" r="54"/>
+                        <circle class="score-fill" id="r1-score-circle" cx="60" cy="60" r="54"/>
+                    </svg>
+                    <div class="score-value" id="r1-score-value">0</div>
+                    <div class="score-label">/10</div>
+                </div>
+
+                <h2>Coding Round Score</h2>
+
+                <div class="results-details">
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-check-circle"></i></span>
+                        <div>
+                            <strong>Correctness</strong>
+                            <p id="r1-correctness">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-tachometer-alt"></i></span>
+                        <div>
+                            <strong>Time Complexity</strong>
+                            <p id="r1-time-complexity">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-memory"></i></span>
+                        <div>
+                            <strong>Space Complexity</strong>
+                            <p id="r1-space-complexity">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-star"></i></span>
+                        <div>
+                            <strong>Code Quality</strong>
+                            <p id="r1-code-quality">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-lightbulb"></i></span>
+                        <div>
+                            <strong>Suggestions</strong>
+                            <p id="r1-suggestions">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="remarks-box" id="r1-remarks">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Loading remarks...</p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="continue-to-round2-btn">
+                    Continue to Round 2 <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 2 — INTERVIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="round2-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <div class="logo-small"><i class="fas fa-brain"></i> InterviewAI</div>
+                <div class="round-badge interview-badge">Round 2 — AI Interview</div>
+            </div>
+            <div class="header-center">
+                <div class="question-progress">
+                    <span id="r2-progress-text">Question 1 of 5</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="r2-progress-fill" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="eye-status" id="eye-status">
+                    <i class="fas fa-eye"></i> <span>Tracking</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="round2-container">
+            <!-- Video Feed -->
+            <div class="video-panel">
+                <div class="video-wrapper">
+                    <video id="webcam-feed" autoplay playsinline muted></video>
+                    <canvas id="eye-canvas" class="hidden"></canvas>
+                    <div class="video-overlay" id="video-overlay">
+                        <i class="fas fa-video"></i>
+                        <p>Camera will start when ready</p>
+                    </div>
+                </div>
+                <div class="mic-status" id="mic-status">
+                    <i class="fas fa-microphone"></i>
+                    <span>Microphone Ready</span>
+                </div>
+            </div>
+
+            <!-- Interview Panel -->
+            <div class="interview-panel">
+                <div class="interviewer-section">
+                    <div class="interviewer-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="interviewer-bubble">
+                        <div class="interviewer-name">AI Interviewer</div>
+                        <p id="current-question-text">Preparing your questions...</p>
+                    </div>
+                </div>
+
+                <div class="answer-section">
+                    <div class="answer-header">
+                        <i class="fas fa-microphone-alt"></i>
+                        <span>Your Answer</span>
+                        <span class="recording-indicator hidden" id="recording-indicator">
+                            <span class="rec-dot"></span> Recording
+                        </span>
+                    </div>
+                    <div class="answer-text" id="answer-text">
+                        <p class="placeholder-text">Click "Start Answering" and speak your response...</p>
+                    </div>
+                </div>
+
+                <div class="interview-controls">
+                    <button class="btn btn-outline" id="replay-question-btn">
+                        <i class="fas fa-redo"></i> Replay Question
+                    </button>
+                    <button class="btn btn-success" id="start-answer-btn">
+                        <i class="fas fa-microphone"></i> Start Answering
+                    </button>
+                    <button class="btn btn-primary" id="submit-answer-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> Submit Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 2 RESULTS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="round2-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <div class="logo-small"><i class="fas fa-brain"></i> InterviewAI</div>
+                <div class="round-badge results-badge">Round 2 — Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card wide-card">
+                <div class="score-circle">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="score-bg" cx="60" cy="60" r="54"/>
+                        <circle class="score-fill" id="r2-score-circle" cx="60" cy="60" r="54"/>
+                    </svg>
+                    <div class="score-value" id="r2-score-value">0</div>
+                    <div class="score-label">/10</div>
+                </div>
+
+                <h2>Interview Round Score</h2>
+
+                <!-- Per-question results -->
+                <div class="per-question-results" id="per-question-results">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="results-details" id="r2-details">
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-star"></i></span>
+                        <div>
+                            <strong>Strengths</strong>
+                            <p id="r2-strengths">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-chart-line"></i></span>
+                        <div>
+                            <strong>Areas for Improvement</strong>
+                            <p id="r2-improvements">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="remarks-box" id="r2-remarks">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Loading remarks...</p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="view-final-results-btn">
+                    View Final Results <i class="fas fa-trophy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FINAL RESULTS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="final-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <div class="logo-small"><i class="fas fa-brain"></i> InterviewAI</div>
+                <div class="round-badge final-badge"><i class="fas fa-trophy"></i> Final Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card final-card">
+                <div class="confetti-container" id="confetti-container"></div>
+
+                <h1 class="final-title">Interview Complete!</h1>
+                <p class="final-subtitle" id="final-candidate-name">Great job, Candidate!</p>
+
+                <div class="final-scores">
+                    <div class="final-score-card">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54"/>
+                                <circle class="score-fill" id="final-r1-circle" cx="60" cy="60" r="54"/>
+                            </svg>
+                            <div class="score-value" id="final-r1-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Coding Round</h3>
+                    </div>
+                    <div class="final-score-card">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54"/>
+                                <circle class="score-fill" id="final-r2-circle" cx="60" cy="60" r="54"/>
+                            </svg>
+                            <div class="score-value" id="final-r2-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Interview Round</h3>
+                    </div>
+                    <div class="final-score-card total">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54"/>
+                                <circle class="score-fill" id="final-total-circle" cx="60" cy="60" r="54"/>
+                            </svg>
+                            <div class="score-value" id="final-total-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Overall</h3>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="back-to-home-btn">
+                    <i class="fas fa-home"></i> Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SCRIPTS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- CodeMirror -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+
+    <!-- Firebase (compat for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/round1.js"></script>
+    <script src="js/round2.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

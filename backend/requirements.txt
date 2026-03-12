@@ -1,0 +1,9 @@
+flask==3.1.0
+flask-cors==5.0.1
+requests==2.32.3
+gTTS==2.5.4
+PyPDF2==3.0.1
+opencv-python==4.10.0.84
+mediapipe>=0.10.30
+numpy>=1.26.4
+python-dotenv==1.0.1

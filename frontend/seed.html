@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed DSA Questions to Firestore</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #log {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .success {
+            color: #4ade80;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        .info {
+            color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Seed DSA Questions</h1>
+        <p>Click the button below to upload all 350 DSA questions to Firestore.</p>
+        <button id="seed-btn" onclick="seedQuestions()">Seed Questions to Firestore</button>
+        <div id="log"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        function log(msg, cls = 'info') {
+            const el = document.getElementById('log');
+            el.innerHTML += `<div class="${cls}">${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        async function seedQuestions() {
+            const btn = document.getElementById('seed-btn');
+            btn.disabled = true;
+            log('Fetching questions.json...');
+
+            try {
+                const resp = await fetch('/api/questions-data');
+                if (!resp.ok) throw new Error('Failed to fetch questions data from server');
+                const allQuestions = await resp.json();
+
+                const companies = Object.keys(allQuestions);
+                log(`Found ${companies.length} companies: ${companies.join(', ')}`);
+
+                for (const company of companies) {
+                    const questions = allQuestions[company];
+                    log(`Seeding ${company}: ${questions.length} questions...`);
+
+                    await db.collection('dsa_questions').doc(company).set({
+                        company: company,
+                        questions: questions,
+                        count: questions.length,
+                        seeded_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    log(`✓ ${company} seeded successfully (${questions.length} questions)`, 'success');
+                }
+
+                const total = companies.reduce((sum, c) => sum + allQuestions[c].length, 0);
+                log(`\nAll done! ${total} questions seeded across ${companies.length} companies.`, 'success');
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

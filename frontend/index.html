@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syntatic — Interview Simulator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/auth.css?v=2">
+</head>
+
+<body>
+
+    <!-- GLOBAL BACKGROUND ORBS (Stitch-Inspired) -->
+    <div class="global-bg-orbs">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+        <div class="orb orb-d"></div>
+    </div>
+
+    <!-- SVG Defs for Score Gradients -->
+    <svg style="position:absolute;width:0;height:0">
+        <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0077b6" />
+                <stop offset="50%" stop-color="#48cae4" />
+                <stop offset="100%" stop-color="#caf0f8" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Preparing your interview...</p>
+        </div>
+    </div>
+
+    <!-- WARNING OVERLAY (Eye Tracking) -->
+    <div id="eye-warning-overlay" class="eye-warning-overlay hidden">
+        <div class="warning-content">
+            <i id="eye-warning-icon" class="fas fa-exclamation-triangle"></i>
+            <p id="eye-warning-text">Please look at the screen!</p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: AUTH PAGE                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="auth-view" class="view active">
+        <div class="auth-container">
+            <div class="auth-showcase">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-code"></i></div>
+                    <span>Synta<span class="accent">tic</span></span>
+                </div>
+                <h1 class="hero-title">Your AI-Powered <br><span class="gradient-text">Interview Simulator</span></h1>
+                <p class="hero-subtitle" style="text-align: left; margin: 0; margin-bottom: 40px; color: rgba(255,255,255,0.9);">
+                    Experience realistic coding rounds and interactive behavioral interviews.
+                </p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                        <div>
+                            <h3>Adaptive AI Engine</h3>
+                            <p>Questions dynamically matched to your skill level and tech stack.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-video"></i></div>
+                        <div>
+                            <h3>Live Behavioral Rounds</h3>
+                            <p>Real-time speech and eye-tracking evaluations.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <h3>Detailed Analytics</h3>
+                            <p>Track your history and see improvement across mock sessions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="auth-form-panel glass-card">
+                <div class="auth-tabs">
+                    <button id="tab-login" class="auth-tab active">Log In</button>
+                    <button id="tab-register" class="auth-tab">Create Account</button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" class="auth-form active">
+                    <div class="form-group">
+                        <label for="login-identifier"><i class="fas fa-user"></i> Username or Email</label>
+                        <input type="text" id="login-identifier" placeholder="Enter username or email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password"><i class="fas fa-lock"></i> Password</label>
+                        <div class="password-input">
+                            <input type="password" id="login-password" placeholder="Enter password" required>
+                            <i class="fas fa-eye toggle-password" data-target="login-password"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large btn-full" id="login-btn">
+                        <span>Log In</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="register-form" class="auth-form hidden">
+                    <div class="form-group">
+                        <label for="reg-fullname"><i class="fas fa-id-card"></i> Full Name</label>
+                        <input type="text" id="reg-fullname" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-username"><i class="fas fa-at"></i> Username <span class="label-optional">(Unique)</span></label>
+                        <input type="text" id="reg-username" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="reg-email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password"><i class="fas fa-lock"></i> Password</label>
+                        <div class="password-input">
+                            <input type="password" id="reg-password" placeholder="Create a password" required minlength="6">
+                            <i class="fas fa-eye toggle-password" data-target="reg-password"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large btn-full" id="register-btn">
+                        <span>Create Account</span> <i class="fas fa-user-plus"></i>
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>or continue with</span>
+                </div>
+
+                <button class="btn btn-outline btn-full btn-google" id="google-auth-btn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: HOME PAGE                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="home-view" class="view">
+        <header class="main-header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-code"></i></div>
+                    <span>Synta<span class="accent">tic</span></span>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button id="logout-btn" class="btn btn-outline btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <div class="hero-section">
+            <div class="hero-bg-orb orb-1"></div>
+            <div class="hero-bg-orb orb-2"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Ace Your Next <span class="gradient-text">Technical Interview</span></h1>
+                <p class="hero-subtitle">Practice with DSA challenges and behavioral interviews tailored to
+                    top tech companies.</p>
+            </div>
+        </div>
+
+        <div class="home-container">
+            <!-- LEFT: Setup Form -->
+            <div class="setup-panel glass-card">
+                <div class="panel-header">
+                    <div class="panel-icon"><i class="fas fa-rocket"></i></div>
+                    <div>
+                        <h2>Start New Interview</h2>
+                        <p>Configure your mock interview session</p>
+                    </div>
+                </div>
+
+                <form id="interview-form" class="interview-form">
+                    <div class="form-group">
+                        <label for="domain-select"><i class="fas fa-code"></i> Tech Domain</label>
+                        <select id="domain-select">
+                            <option value="" disabled selected>Select your domain</option>
+                            <option value="Frontend Development">Frontend Development</option>
+                            <option value="Backend Development">Backend Development</option>
+                            <option value="Full Stack Development">Full Stack Development</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Machine Learning / AI">Machine Learning / AI</option>
+                            <option value="Mobile App Development">Mobile App Development</option>
+                            <option value="Cloud Computing & DevOps">Cloud Computing & DevOps</option>
+                            <option value="Cybersecurity">Cybersecurity</option>
+                            <option value="Blockchain & Web3">Blockchain & Web3</option>
+                            <option value="Database & System Design">Database & System Design</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="difficulty-select"><i class="fas fa-signal"></i> Difficulty</label>
+                            <select id="difficulty-select">
+                                <option value="" disabled selected>Select level</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="company-select"><i class="fas fa-building"></i> Company</label>
+                            <select id="company-select">
+                                <option value="" disabled selected>Select company</option>
+                                <option value="Google">Google</option>
+                                <option value="Amazon">Amazon</option>
+                                <option value="Meta">Meta</option>
+                                <option value="Apple">Apple</option>
+                                <option value="Netflix">Netflix</option>
+                                <option value="Microsoft">Microsoft</option>
+                                <option value="Startup">Startup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resume-upload"><i class="fas fa-file-pdf"></i> Resume <span
+                                class="label-optional">(Optional)</span></label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <input type="file" id="resume-upload" accept=".pdf" hidden>
+                            <div class="upload-placeholder" id="upload-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click or drag PDF resume here</p>
+                                <span>Questions will be tailored to your experience</span>
+                            </div>
+                            <div class="upload-success hidden" id="upload-success">
+                                <i class="fas fa-check-circle"></i>
+                                <p id="uploaded-filename">resume.pdf</p>
+                                <button type="button" id="remove-resume" class="btn-text">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large" id="start-btn">
+                        <span>Launch Interview</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT: History Panel -->
+            <div class="history-panel glass-card">
+                <div class="panel-header">
+                    <div class="panel-icon"><i class="fas fa-chart-bar"></i></div>
+                    <div>
+                        <h2>Performance Dashboard</h2>
+                        <p>Your past interview scores</p>
+                    </div>
+                </div>
+
+                <div class="avg-performance" id="avg-performance">
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-total-score">--</div>
+                        <div class="avg-label">Avg Score</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-round1-score">--</div>
+                        <div class="avg-label">Round 1</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="avg-round2-score">--</div>
+                        <div class="avg-label">Round 2</div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-score" id="total-interviews">0</div>
+                        <div class="avg-label">Sessions</div>
+                    </div>
+                </div>
+
+                <div class="history-list" id="history-list">
+                    <div class="history-empty">
+                        <i class="fas fa-inbox"></i>
+                        <p>No interviews yet</p>
+                        <span>Start your first mock interview!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 1 — DSA CODING                                       -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="round1-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <button class="btn btn-sm btn-outline back-btn" onclick="window.App.goHome()" title="Back to Home" style="margin-right: 12px; padding: 6px 12px;">
+                    <i class="fas fa-arrow-left" style="margin: 0;"></i>
+                </button>
+                <div class="logo-small"><i class="fas fa-code"></i> Syntatic</div>
+                <div class="round-badge">Round 1 — Coding Challenge</div>
+            </div>
+            <div class="header-right">
+                <div class="timer" id="round1-timer">
+                    <i class="fas fa-clock"></i> <span id="r1-time">45:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="round1-container">
+            <div class="question-panel" id="question-panel">
+                <div class="question-header">
+                    <span class="question-difficulty" id="q-difficulty">Medium</span>
+                    <span class="question-topic" id="q-topic">Arrays</span>
+                </div>
+                <h2 id="q-title">Loading question...</h2>
+                <div class="question-body" id="q-description">
+                    <p>Please wait while we generate your coding challenge...</p>
+                </div>
+                <div class="question-examples" id="q-examples"></div>
+                <div class="question-constraints" id="q-constraints"></div>
+            </div>
+
+            <div class="editor-panel">
+                <div class="editor-toolbar">
+                    <select id="language-select" class="lang-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="text/x-java">Java</option>
+                        <option value="text/x-csrc">C</option>
+                        <option value="text/x-c++src">C++</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline" id="reset-code-btn">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div id="code-editor"></div>
+                <div class="editor-footer">
+                    <button class="btn btn-primary btn-large" id="submit-code-btn">
+                        <i class="fas fa-paper-plane"></i> Submit Solution
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 1 RESULTS                                            -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="round1-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <button class="btn btn-sm btn-outline back-btn" onclick="window.App.goHome()" title="Back to Home" style="margin-right: 12px; padding: 6px 12px;">
+                    <i class="fas fa-arrow-left" style="margin: 0;"></i>
+                </button>
+                <div class="logo-small"><i class="fas fa-code"></i> Syntatic</div>
+                <div class="round-badge results-badge">Round 1 — Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card glass-card">
+                <div class="score-circle">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="score-bg" cx="60" cy="60" r="54" />
+                        <circle class="score-fill" id="r1-score-circle" cx="60" cy="60" r="54" />
+                    </svg>
+                    <div class="score-value" id="r1-score-value">0</div>
+                    <div class="score-label">/10</div>
+                </div>
+
+                <h2>Coding Round Score</h2>
+
+                <div class="results-details">
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-check-circle"></i></span>
+                        <div><strong>Correctness</strong>
+                            <p id="r1-correctness">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-tachometer-alt"></i></span>
+                        <div><strong>Time Complexity</strong>
+                            <p id="r1-time-complexity">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-memory"></i></span>
+                        <div><strong>Space Complexity</strong>
+                            <p id="r1-space-complexity">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-star"></i></span>
+                        <div><strong>Code Quality</strong>
+                            <p id="r1-code-quality">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-lightbulb"></i></span>
+                        <div><strong>Suggestions</strong>
+                            <p id="r1-suggestions">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="remarks-box" id="r1-remarks">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Loading remarks...</p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="continue-to-round2-btn">
+                    <span>Continue to Round 2</span> <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 2 — INTERVIEW                                        -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="round2-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <button class="btn btn-sm btn-outline back-btn" onclick="window.App.goHome()" title="Back to Home" style="margin-right: 12px; padding: 6px 12px;">
+                    <i class="fas fa-arrow-left" style="margin: 0;"></i>
+                </button>
+                <div class="logo-small"><i class="fas fa-code"></i> Syntatic</div>
+                <div class="round-badge interview-badge">Round 2 — Interview</div>
+            </div>
+            <div class="header-center">
+                <div class="question-progress">
+                    <span id="r2-progress-text">Question 1 of 5</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="r2-progress-fill" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="eye-status" id="eye-status">
+                    <i class="fas fa-eye"></i> <span>Tracking</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="round2-container">
+            <div class="video-panel">
+                <div class="video-wrapper">
+                    <video id="webcam-feed" autoplay playsinline muted></video>
+                    <canvas id="eye-canvas" class="hidden"></canvas>
+                    <div class="video-overlay" id="video-overlay">
+                        <i class="fas fa-video"></i>
+                        <p>Camera will start when ready</p>
+                    </div>
+                </div>
+                <div class="mic-status" id="mic-status">
+                    <i class="fas fa-microphone"></i>
+                    <span>Microphone Ready</span>
+                </div>
+            </div>
+
+            <div class="interview-panel">
+                <div class="interviewer-section">
+                    <div class="interviewer-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="interviewer-bubble">
+                        <div class="interviewer-name">Interviewer</div>
+                        <p id="current-question-text">Preparing your questions...</p>
+                    </div>
+                </div>
+
+                <div class="answer-section">
+                    <div class="answer-header">
+                        <i class="fas fa-microphone-alt"></i>
+                        <span>Your Answer</span>
+                        <span class="recording-indicator hidden" id="recording-indicator">
+                            <span class="rec-dot"></span> Recording
+                        </span>
+                    </div>
+                    <div class="answer-text" id="answer-text">
+                        <p class="placeholder-text">Click "Start Answering" and speak your response...</p>
+                    </div>
+                </div>
+
+                <div class="interview-controls">
+                    <button class="btn btn-outline" id="replay-question-btn">
+                        <i class="fas fa-redo"></i> Replay
+                    </button>
+                    <button class="btn btn-success" id="start-answer-btn">
+                        <i class="fas fa-microphone"></i> Start Answering
+                    </button>
+                    <button class="btn btn-primary" id="submit-answer-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> Submit Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: ROUND 2 RESULTS                                            -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="round2-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <button class="btn btn-sm btn-outline back-btn" onclick="window.App.goHome()" title="Back to Home" style="margin-right: 12px; padding: 6px 12px;">
+                    <i class="fas fa-arrow-left" style="margin: 0;"></i>
+                </button>
+                <div class="logo-small"><i class="fas fa-code"></i> Syntatic</div>
+                <div class="round-badge results-badge">Round 2 — Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card wide-card glass-card">
+                <div class="score-circle">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="score-bg" cx="60" cy="60" r="54" />
+                        <circle class="score-fill" id="r2-score-circle" cx="60" cy="60" r="54" />
+                    </svg>
+                    <div class="score-value" id="r2-score-value">0</div>
+                    <div class="score-label">/10</div>
+                </div>
+
+                <h2>Interview Round Score</h2>
+
+                <div class="per-question-results" id="per-question-results"></div>
+
+                <div class="results-details" id="r2-details">
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-star"></i></span>
+                        <div><strong>Strengths</strong>
+                            <p id="r2-strengths">--</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon"><i class="fas fa-chart-line"></i></span>
+                        <div><strong>Areas for Improvement</strong>
+                            <p id="r2-improvements">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="remarks-box" id="r2-remarks">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Loading remarks...</p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="view-final-results-btn">
+                    <span>View Final Results</span> <i class="fas fa-trophy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FINAL RESULTS                                               -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="final-results-view" class="view">
+        <header class="round-header">
+            <div class="header-left">
+                <button class="btn btn-sm btn-outline back-btn" onclick="window.App.goHome()" title="Back to Home" style="margin-right: 12px; padding: 6px 12px;">
+                    <i class="fas fa-arrow-left" style="margin: 0;"></i>
+                </button>
+                <div class="logo-small"><i class="fas fa-code"></i> Syntatic</div>
+                <div class="round-badge final-badge"><i class="fas fa-trophy"></i> Final Results</div>
+            </div>
+        </header>
+
+        <div class="results-container">
+            <div class="results-card final-card glass-card">
+                <div class="confetti-container" id="confetti-container"></div>
+
+                <h1 class="final-title">Interview Complete!</h1>
+                <p class="final-subtitle" id="final-candidate-name">Great job, Candidate!</p>
+
+                <div class="final-scores">
+                    <div class="final-score-card">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54" />
+                                <circle class="score-fill" id="final-r1-circle" cx="60" cy="60" r="54" />
+                            </svg>
+                            <div class="score-value" id="final-r1-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Coding Round</h3>
+                    </div>
+                    <div class="final-score-card">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54" />
+                                <circle class="score-fill" id="final-r2-circle" cx="60" cy="60" r="54" />
+                            </svg>
+                            <div class="score-value" id="final-r2-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Interview Round</h3>
+                    </div>
+                    <div class="final-score-card total">
+                        <div class="final-score-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="score-bg" cx="60" cy="60" r="54" />
+                                <circle class="score-fill" id="final-total-circle" cx="60" cy="60" r="54" />
+                            </svg>
+                            <div class="score-value" id="final-total-score">0</div>
+                            <div class="score-label">/10</div>
+                        </div>
+                        <h3>Overall</h3>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="back-to-home-btn" onclick="window.App.goHome()">
+                    <i class="fas fa-home"></i> <span>Back to Home</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- PROCTORING UI -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="cheat-modal" class="modal-overlay hidden">
+        <div class="modal-content cheat-modal-content">
+            <button class="modal-close-btn" id="close-cheat-modal">&times;</button>
+            <div class="modal-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2>Interview Terminated</h2>
+            <p>Your interview was terminated due to repeated tab switching.</p>
+            <p class="modal-subtext">Navigating away from the interview screen is a violation of our proctoring rules.</p>
+            <div id="cheat-modal-scores" class="cheat-modal-scores" style="display:none; margin-top: 16px; padding: 14px; background: rgba(0,0,0,0.03); border-radius: 10px; text-align: center;">
+                <p style="font-weight: 600; margin-bottom: 8px; color: #334155;">Your Scores</p>
+                <div style="display: flex; justify-content: center; gap: 24px;">
+                    <div><span style="font-size: 1.3rem; font-weight: 700; color: #0ea5e9;" id="cheat-r1-score">0</span><br><small style="color:#64748b;">Round 1</small></div>
+                    <div><span style="font-size: 1.3rem; font-weight: 700; color: #0ea5e9;" id="cheat-r2-score">0</span><br><small style="color:#64748b;">Round 2</small></div>
+                    <div><span style="font-size: 1.3rem; font-weight: 700; color: #ef4444;" id="cheat-total-score">0</span><br><small style="color:#64748b;">Overall</small></div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="cheat-go-home-btn" style="margin-top: 16px; width: 100%;"><i class="fas fa-home"></i> Back to Home</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script src="js/firebase-config.js?v=3"></script>
+    <script src="js/auth.js?v=4"></script>
+    <script src="js/history.js?v=3"></script>
+    <script src="js/round1.js?v=3"></script>
+    <script src="js/round2.js?v=3"></script>
+    <script src="js/app.js?v=4"></script>
+</body>
+
+</html>
