@@ -1,5 +1,6 @@
-// Auto-detect backend URL: empty when served by Flask, full URL otherwise
-window.API_BASE = window.location.port === '5000' ? '' : 'http://localhost:5000';
+// Auto-detect backend URL: use Render in production, localhost in dev
+const _isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+window.API_BASE = _isLocal ? 'http://localhost:5000' : 'https://syntatic-2.onrender.com';
 
 window.AppState = {
     name: '',

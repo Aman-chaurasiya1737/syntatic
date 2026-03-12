@@ -4,18 +4,22 @@ from services.gemini_service import GeminiService
 from services.tts_service import TTSService
 from services.resume_service import ResumeService
 from services.eye_tracking_service import EyeTrackingService
+from dotenv import load_dotenv
 import os
 
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend')
+load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
+TEMP_DIR = os.path.join(BASE_DIR, 'temp')
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 app = Flask(__name__, static_folder=None)
 CORS(app)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-GEMINI_API_KEY = "AIzaSyCqk9eGT9U9psQGtMD9neFULR2a0iL_xpU"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 gemini = GeminiService(api_key=GEMINI_API_KEY)
-tts = TTSService(output_dir=os.path.join(BASE_DIR, "temp"))
+tts = TTSService(output_dir=TEMP_DIR)
 resume_parser = ResumeService()
 eye_tracker = EyeTrackingService()
 
@@ -80,8 +84,7 @@ def text_to_speech():
     if not text:
         return jsonify({"error": "No text provided"}), 400
 
-    import os
-    os.makedirs('temp', exist_ok=True)
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
     filepath = tts.generate(text)
     if not filepath:
@@ -143,7 +146,7 @@ def serve_static(path):
     return response
 
 if __name__ == '__main__':
-    os.makedirs('temp', exist_ok=True)
+    os.makedirs(TEMP_DIR, exist_ok=True)
     print("=" * 60)
     print("  Syntatic — Interview Simulator")
     print("  Running on http://localhost:5000")
